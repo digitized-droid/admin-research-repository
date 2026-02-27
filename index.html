@@ -408,6 +408,28 @@ button.delete-btn:hover {
 #editForm .form-actions button.cancel:hover {
     background: #aaa;
 }
+	  /* --- Responsive --- */
+       @media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+
+  #sidebar {
+    order: -1; /* move sidebar above main content */
+    position: static; /* optional: remove sticky on mobile */
+  }
+
+            .header-container { flex-direction: column; gap: 1rem; }
+            .nav-menu { gap: 1rem; }
+        }
+		#main-content {
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+#sidebar {
+    overflow-y: auto;
+}
 </style>
 </head>
 <header>
