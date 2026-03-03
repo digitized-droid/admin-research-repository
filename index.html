@@ -922,15 +922,6 @@ document.getElementById("downloadReport").onclick = async () => {
   /* ---------------- DYNAMIC SPACING ---------------- */
   const headerSpacing = imgY + imgHeight + 10;
 
-  /* ---------------- TITLE ---------------- */
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "normal");
-  doc.text("Research Collection Report", pageWidth / 2, headerSpacing + 16, { align: "center" });
-
-  doc.setFontSize(9);
-  doc.text("Generated on: " + new Date().toLocaleDateString(), pageWidth / 2, headerSpacing + 24, { align: "center" });
-
   /* ---------------- TABLE ---------------- */
 
   const tableStartY = headerSpacing + 35;
