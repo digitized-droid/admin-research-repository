@@ -920,11 +920,11 @@ document.getElementById("downloadReport").onclick = async () => {
   doc.addImage(imgData, "PNG", imgX, imgY, imgWidth, imgHeight);
 
   /* ---------------- DYNAMIC SPACING ---------------- */
-  const headerSpacing = imgY + imgHeight + 10;
+  const headerSpacing = imgY + imgHeight + 5;
 
   /* ---------------- TABLE ---------------- */
 
-  const tableStartY = headerSpacing + 15;
+  const tableStartY = headerSpacing + 35;
 
   const tableData = filtered.map(r => [
     r.title || "",
