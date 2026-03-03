@@ -1000,7 +1000,8 @@ uploadForm.onsubmit = async e =>{
   const title = document.getElementById("title").value.trim();
   const sdg = toSDGArray(
   document.getElementById("sdg").value
-).join(", ");
+);
+join(", ");
   const authors = document.getElementById("authors").value
     .split(",").map(a=>a.trim()).filter(Boolean).join("\n");
   const advisers = document.getElementById("advisers").value
@@ -1100,9 +1101,8 @@ window.editResearch = async id => {
 	  .split(",").map(a => a.trim()).filter(Boolean).join("\n"),
 	  sdg: toSDGArray(
   document.getElementById("editSDG").value
-).join(", "),
-    };
-
+),
+}; 
     const { error } = await supabaseClient
       .from("researches")
       .update(updated)
