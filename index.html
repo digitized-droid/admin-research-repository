@@ -925,7 +925,8 @@ const doc = new jsPDF({ orientation: "landscape" });
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text("Generated on: " + new Date().toLocaleDateString(), 14, 22);
-
+doc.setFont("helvetica", "bold");
+doc.text("Total Research Records: " + filtered.length, 14, 28);
   const tableData = filtered.map(r => {
 
     // First author only + et al
@@ -963,7 +964,7 @@ const doc = new jsPDF({ orientation: "landscape" });
       "Year"
     ]],
     body: tableData,
-    startY: 28,
+    startY: 34,
     theme: "grid",
     styles: {
       fontSize: 9,
