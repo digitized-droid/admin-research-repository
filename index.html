@@ -6,7 +6,8 @@
 <title>URSM Library</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
 .myImage {
             height: 60px;
@@ -432,6 +433,13 @@ button.delete-btn:hover {
     flex-direction: column;
     gap: 1rem;
   }
+  #downloadReport {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+}
 }
 </style>
 </head>
@@ -455,9 +463,6 @@ button.delete-btn:hover {
     <form id="editForm">
       <label>Title</label>
       <input type="text" id="editTitle" required>
-
-      <label>Category</label>
-      <input type="text" id="editCategory">
 	  
 	  <label>SDG</label>
 	  <input type="text" id="editSDG">
@@ -506,9 +511,6 @@ button.delete-btn:hover {
           <form id="uploadForm">
             <label>Title</label>
             <input type="text" id="title" required>
-
-            <label>Category</label>
-            <input type="text" id="category" placeholder="e.g., An Undergraduate Thesis....">
             
             <label>SDG</label>
             <input type="text" id="sdg" placeholder="e.g, SDG 4 - Quality Education">
@@ -567,6 +569,12 @@ button.delete-btn:hover {
       </details>
 
       <button id="clear-filters" class="clearbtn">Clear Filters</button>
+
+<br><br>
+
+<button id="downloadReport" class="download-pdf" style="width:100%;">
+  Download Collection Report (PDF)
+</button>
     </div>
 
   </div>
@@ -632,8 +640,24 @@ const toKeywordArray = v => {
   if (typeof v === "string") return v.split(",").map(k => k.trim()).filter(Boolean);
   return [];
 };
+const toSDGArray = v => {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(s => s.trim()).filter(Boolean);
 
-
+  return v
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+};
+async function loadImageAsBase64(url) {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+}
 
 /* ---------- LOAD ---------- */
 async function load() {
@@ -689,8 +713,9 @@ function applyFilters() {
 
 const matchSDG =
   !filters.sdg ||
-  asText(r.sdg)
-?.toLowerCase().includes(filters.sdg.toLowerCase());
+  toSDGArray(r.sdg).some(s =>
+    s.toLowerCase() === filters.sdg.toLowerCase()
+  );
 
 
     const matchKeyword =
@@ -735,12 +760,8 @@ function render(rows) {
   <div>Course</div>
   <div>${toArray(r.course).join("<br>")}</div>
 
-  <div>Category</div>
-  <div>${r.category||""}</div>
-
   <div>SDG</div>
-  <div>${asText(r.sdg)
-||""}</div>
+  <div>${toSDGArray(r.sdg).join(", ")}</div>
 
   <div>Date</div>
   <div>${r.research_date||""}</div>
@@ -807,10 +828,9 @@ function renderSDGs(data){
   const m = {};
 
   data.forEach(d => {
-    if(!d.sdg) return;
-    const s = d.sdg.trim();
-    if(!s) return;
-    m[s] = (m[s] || 0) + 1;
+    toSDGArray(d.sdg).forEach(s => {
+      m[s] = (m[s] || 0) + 1;
+    });
   });
 
   const container = document.getElementById("sdg-buttons");
@@ -869,6 +889,95 @@ toggleBtn.onclick = () => {
   toggleBtn.textContent = visible ? "Upload Research ▼" : "Upload Research ▲";
 };
 
+
+/* ---------- DOWNLOAD Collection REPORT ---------- */
+document.getElementById("downloadReport").onclick = async () => {
+
+  const filtered = dataCache;
+
+  if (!filtered.length) {
+    alert("No data available to export.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape" });
+
+  /* ---------------- LOAD IMAGE FROM GITHUB ---------------- */
+  const imgData = await loadImageAsBase64(
+    "https://digitized-droid.github.io/admin-research-repository/URS%20header.png"
+  );
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginTop = 15;
+
+  const imgWidth = 80;  // adjust if needed
+  const imgHeight = 40; // adjust proportionally
+
+  const imgX = (pageWidth - imgWidth) / 2;
+  const imgY = marginTop;
+
+  doc.addImage(imgData, "PNG", imgX, imgY, imgWidth, imgHeight);
+
+  /* ---------------- DYNAMIC SPACING ---------------- */
+  const headerSpacing = imgY + imgHeight + 10;
+
+  /* ---------------- TITLE ---------------- */
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("University of Rizal System", pageWidth / 2, headerSpacing, { align: "center" });
+
+  doc.setFontSize(12);
+  doc.text("Morong Campus Library", pageWidth / 2, headerSpacing + 8, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("Research Collection Report", pageWidth / 2, headerSpacing + 16, { align: "center" });
+
+  doc.setFontSize(9);
+  doc.text("Generated on: " + new Date().toLocaleDateString(), pageWidth / 2, headerSpacing + 24, { align: "center" });
+
+  /* ---------------- TABLE ---------------- */
+
+  const tableStartY = headerSpacing + 35;
+
+  const tableData = filtered.map(r => [
+    r.title || "",
+    toArray(r.authors)[0] || "",
+    toArray(r.advisers)[0] || "",
+    r.course || "",
+    toSDGArray(r.sdg).join(", "),
+    r.research_date || "",
+    r.academic_year || ""
+  ]);
+
+  doc.autoTable({
+    head: [[
+      "Thesis Title",
+      "Author",
+      "Adviser",
+      "Course",
+      "SDG",
+      "Research Date",
+      "Year"
+    ]],
+    body: tableData,
+    startY: tableStartY,
+    theme: "grid",
+    styles: {
+      fontSize: 8,
+      cellPadding: 3
+    },
+    headStyles: {
+      fillColor: [230, 230, 230],
+      textColor: 0,
+      fontStyle: "bold"
+    }
+  });
+
+  doc.save("URSM_Research_Collection_Report.pdf");
+};
+
 /* ---------- PASSWORD PROTECTION ---------- */
 const UPLOAD_PASSWORD = "YourSecret123"; // same password for upload & delete
 const uploadForm = document.getElementById("uploadForm");
@@ -883,8 +992,9 @@ uploadForm.onsubmit = async e =>{
   }
 
   const title = document.getElementById("title").value.trim();
-  const category = document.getElementById("category").value.trim();
-  const sdg = document.getElementById("sdg").value.trim();
+  const sdg = toSDGArray(
+  document.getElementById("sdg").value
+).join(", ");
   const authors = document.getElementById("authors").value
     .split(",").map(a=>a.trim()).filter(Boolean).join("\n");
   const advisers = document.getElementById("advisers").value
@@ -901,7 +1011,6 @@ uploadForm.onsubmit = async e =>{
 
   const { data, error } = await supabaseClient.from("researches").insert([{
     title,
-    category,
 	sdg,
     authors,
 	advisers,
@@ -950,7 +1059,6 @@ window.editResearch = async id => {
 
   // Fill modal fields
   document.getElementById("editTitle").value = record.title;
-  document.getElementById("editCategory").value = record.category || "";
   document.getElementById("editAuthors").value = toArray(record.authors).join(", ");
   document.getElementById("editCourse").value = record.course || "";
   document.getElementById("editYear").value = record.academic_year || "";
@@ -976,7 +1084,6 @@ window.editResearch = async id => {
 
     const updated = {
       title: document.getElementById("editTitle").value.trim(),
-      category: document.getElementById("editCategory").value.trim(),
       authors: document.getElementById("editAuthors").value.split(",").map(a => a.trim()).filter(Boolean).join("\n"),
       course: document.getElementById("editCourse").value.trim(),
       academic_year: document.getElementById("editYear").value.trim(),
@@ -985,7 +1092,9 @@ window.editResearch = async id => {
       keywords: document.getElementById("editKeywords").value.split(",").map(k => k.trim()).filter(Boolean),
 	  advisers: document.getElementById("editAdvisers").value
 	  .split(",").map(a => a.trim()).filter(Boolean).join("\n"),
-	  sdg: document.getElementById("editSDG").value.trim(),
+	  sdg: toSDGArray(
+  document.getElementById("editSDG").value
+).join(", "),
     };
 
     const { error } = await supabaseClient
