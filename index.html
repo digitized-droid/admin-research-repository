@@ -909,7 +909,7 @@ document.getElementById("downloadReport").onclick = async () => {
   );
 
   const pageWidth = doc.internal.pageSize.getWidth();
-  const marginTop = 15;
+  const marginTop = 5;
 
   const imgWidth = 240;  // adjust if needed
   const imgHeight = 60; // adjust proportionally
@@ -920,7 +920,7 @@ document.getElementById("downloadReport").onclick = async () => {
   doc.addImage(imgData, "PNG", imgX, imgY, imgWidth, imgHeight);
 
   /* ---------------- DYNAMIC SPACING ---------------- */
-  const headerSpacing = imgY + imgHeight + 5;
+  const headerSpacing = imgY + imgHeight + 10;
 
   /* ---------------- TABLE ---------------- */
 
