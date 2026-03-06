@@ -442,6 +442,15 @@ button.delete-btn:hover {
     border-radius: 6px;
 }
 }
+
+
+button.active-filter,
+button.active-filter:hover,
+button.active-filter:focus {
+    background-color: #1e3a8a;
+    color:  #FF8C00;
+    font-weight: 600;
+}
 </style>
 </head>
 <header>
@@ -597,17 +606,18 @@ const search = document.getElementById("search");
 let dataCache = [];
 const clearFiltersBtn = document.getElementById("clear-filters");
 clearFiltersBtn.onclick = () => {
-  // Reset all filters
+
   filters.text = "";
   filters.year = null;
   filters.sdg = null;
   filters.keyword = null;
   filters.date = null;
 
-  // Reset search input
   search.value = "";
 
-  // Re-render full data
+  document.querySelectorAll(".active-filter")
+    .forEach(b => b.classList.remove("active-filter"));
+
   applyFilters();
 };
 
@@ -809,9 +819,21 @@ function renderYears(data){
     btn.textContent = year;
 
     btn.onclick = () => {
-      filters.year = filters.year === year ? null : year;
-      applyFilters();
-    };
+
+  if (filters.year === year) {
+    filters.year = null;
+    btn.classList.remove("active-filter");
+  } else {
+    filters.year = year;
+
+    document.querySelectorAll("#year-buttons button")
+      .forEach(b => b.classList.remove("active-filter"));
+
+    btn.classList.add("active-filter");
+  }
+
+  applyFilters();
+};
 
     container.appendChild(btn);
   });
@@ -840,9 +862,21 @@ function renderSDGs(data){
       btn.textContent = sdg;
 
       btn.onclick = () => {
-        filters.sdg = filters.sdg === sdg ? null : sdg;
-        applyFilters();
-      };
+
+  if (filters.sdg === sdg) {
+    filters.sdg = null;
+    btn.classList.remove("active-filter");
+  } else {
+    filters.sdg = sdg;
+
+    document.querySelectorAll("#sdg-buttons button")
+      .forEach(b => b.classList.remove("active-filter"));
+
+    btn.classList.add("active-filter");
+  }
+
+  applyFilters();
+};
 
       container.appendChild(btn);
     });
@@ -868,9 +902,21 @@ function renderSDGs(data){
       btn.textContent = k;
 
       btn.onclick = () => {
-        filters.keyword = filters.keyword === k ? null : k;
-        applyFilters();
-      };
+
+  if (filters.keyword === k) {
+    filters.keyword = null;
+    btn.classList.remove("active-filter");
+  } else {
+    filters.keyword = k;
+
+    document.querySelectorAll("#keyword-buttons button")
+      .forEach(b => b.classList.remove("active-filter"));
+
+    btn.classList.add("active-filter");
+  }
+
+  applyFilters();
+};
 
       container.appendChild(btn);
     });
