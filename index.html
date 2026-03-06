@@ -829,9 +829,13 @@ function renderSDGs(data){
   const container = document.getElementById("sdg-buttons");
   container.innerHTML = "";
 
-  Object.entries(m)
-    .sort((a,b)=>b[1]-a[1])
-    .forEach(([sdg])=>{
+  Object.keys(m)
+    .sort((a,b)=>{
+      const numA = parseInt(a.match(/\d+/)?.[0] || 0);
+      const numB = parseInt(b.match(/\d+/)?.[0] || 0);
+      return numA - numB; // ascending order
+    })
+    .forEach(sdg=>{
       const btn = document.createElement("button");
       btn.textContent = sdg;
 
