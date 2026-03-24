@@ -1037,17 +1037,19 @@ doc.text("Total Research Records: " + filtered.length, 14, 28);
   doc.save("URSM_Research_Collection_Report.pdf");
 };
 /* ---------- PASSWORD PROTECTION ---------- */
-const UPLOAD_PASSWORD = "YourSecret123"; // same password for upload & delete
+
 const uploadForm = document.getElementById("uploadForm");
 
 uploadForm.onsubmit = async e =>{
   e.preventDefault();
 
   const password = document.getElementById("upload_password").value.trim();
-  if(password !== UPLOAD_PASSWORD){
-    alert("Incorrect password! Upload denied.");
-    return;
-  }
+
+const valid = await verifyPassword(password);
+if (!valid) {
+  alert("Incorrect password! Upload denied.");
+  return;
+}
 
   const title = document.getElementById("title").value.trim();
  const sdg = toSDGArray(document.getElementById("sdg").value);
@@ -1084,11 +1086,30 @@ uploadForm.onsubmit = async e =>{
     load();
   }
 };
+async function verifyPassword(inputPassword) {
+  const { data, error } = await supabaseClient
+    .from("admin_password")
+    .select("password_hash")
+    .limit(1)
+    .single();
 
+  if (error || !data) {
+    alert("Error checking password.");
+    return false;
+  }
+
+  // Use Supabase/Postgres crypt comparison
+  const { data: match } = await supabaseClient.rpc("check_admin_password", {
+    input_password: inputPassword
+  });
+
+  return match === true;
+}
 /* ---------- DELETE WITH PASSWORD ---------- */
 window.del = async id =>{
   const password = prompt("Enter password to delete this research:");
-  if(password !== UPLOAD_PASSWORD){
+  const valid = await verifyPassword(password);
+if (!valid) {
     alert("Incorrect password! Delete denied.");
     return;
   }
@@ -1102,7 +1123,8 @@ window.del = async id =>{
 /* ---------- EDIT WITH PASSWORD ---------- */
 window.editResearch = async id => {
   const password = prompt("Enter password to edit this research:");
-  if (password !== UPLOAD_PASSWORD) {
+  const valid = await verifyPassword(password);
+if (!valid) {
     alert("Incorrect password! Edit denied.");
     return;
   }
